@@ -107,9 +107,6 @@ export function createStoreStateExpectation(
 ): Expectation {
   return ({ storeState, reduxStore }: ExpectationThunkArgs) => {
     const state = reduxStore ? reduxStore.getState() : storeState;
-    if (reduxStore) {
-      console.log('EXPECTED STATE', expectedState, state);
-    }
     if (expected && !isEqual(expectedState, state)) {
       const serializedActual = inspect(state, { depth: 3 });
       const serializedExpected = inspect(expectedState, { depth: 3 });
