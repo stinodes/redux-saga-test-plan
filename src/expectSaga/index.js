@@ -48,9 +48,6 @@ function extractState(reducer: Reducer, initialState?: any): any {
 }
 
 function extractStoreState(store: Store): any {
-  if (!store.getState()) {
-    store.dispatch(INIT_ACTION);
-  }
   return store.getState();
 }
 
@@ -125,7 +122,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
 
   let returnValue;
 
-  let reduxStore: Store;
+  let store: Store;
   let storeState: any;
 
   function setReturnValue(value: any): void {
@@ -345,8 +342,8 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
           notifyListeners(action);
         });
     } else {
-      if (reduxStore) {
-        reduxStore.dispatch(action);
+      if (store) {
+        store.dispatch(action);
       } else {
         storeState = reducer(storeState, action);
       }
@@ -435,7 +432,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
     dispatch,
 
     getState(): any {
-      return reduxStore ? reduxStore.getState() : storeState;
+      return store ? store.getState() : storeState;
     },
 
     sagaMonitor: {
@@ -525,7 +522,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
 
   function checkExpectations(): void {
     expectations.forEach((expectation) => {
-      expectation({ storeState, reduxStore, returnValue });
+      expectation({ storeState, reduxStore: store, returnValue });
     });
   }
 
@@ -589,11 +586,9 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
       return memo;
     }, {});
 
-    const state = reduxStore ? reduxStore.getState() : storeState;
-
     return {
-      storeState: state,
-      reduxStore,
+      storeState,
+      store,
       returnValue,
       effects: finalEffects,
       allEffects,
@@ -617,8 +612,8 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
     });
   }
 
-  function withStore(store: Store) {
-    reduxStore = store;
+  function withStore(newStore: Store) {
+    store = newStore;
     extractStoreState(store);
     return api;
   }

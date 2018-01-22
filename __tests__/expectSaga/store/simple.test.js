@@ -80,13 +80,13 @@ test('tests and exposes changed store state with no initial state', async () => 
     age: 12,
   };
 
-  const { reduxStore } = await expectSaga(saga)
+  const { store } = await expectSaga(saga)
     .withStore(createStore(dogReducer))
     .hasFinalState(expectedFinalState)
     .dispatch({ type: HAVE_BIRTHDAY })
     .run();
 
-  expect(reduxStore.getState()).toEqual(expectedFinalState);
+  expect(store.getState()).toEqual(expectedFinalState);
 });
 
 test('tests and exposes changed store state with initial state', async () => {
@@ -95,13 +95,13 @@ test('tests and exposes changed store state with initial state', async () => {
     age: 12,
   };
 
-  const { reduxStore } = await expectSaga(saga, initialDog)
+  const { store } = await expectSaga(saga, initialDog)
     .withStore(createStore(dogReducer))
     .hasFinalState(expectedFinalState)
     .dispatch({ type: HAVE_BIRTHDAY })
     .run();
 
-  expect(reduxStore.getState()).toEqual(expectedFinalState);
+  expect(store.getState()).toEqual(expectedFinalState);
 });
 
 test('tests negated store state with no initial state', () => {
