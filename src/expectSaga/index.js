@@ -47,6 +47,13 @@ function extractState(reducer: Reducer, initialState?: any): any {
   return initialState || reducer(undefined, INIT_ACTION);
 }
 
+function extractStoreState(store: Store): any {
+  if (!store.getState()) {
+    store.dispatch(INIT_ACTION);
+  }
+  return store.getState();
+}
+
 function isHelper(fn: Function): boolean {
   return fn === takeEveryHelper || fn === takeLatestHelper;
 }
@@ -118,6 +125,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
 
   let returnValue;
 
+  let reduxStore: Store;
   let storeState: any;
 
   function setReturnValue(value: any): void {
@@ -337,7 +345,11 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
           notifyListeners(action);
         });
     } else {
-      storeState = reducer(storeState, action);
+      if (reduxStore) {
+        reduxStore.dispatch(action);
+      } else {
+        storeState = reducer(storeState, action);
+      }
       dispatchPromise.then(() => notifyListeners(action));
     }
   }
@@ -423,7 +435,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
     dispatch,
 
     getState(): any {
-      return storeState;
+      return reduxStore ? reduxStore.getState() : storeState;
     },
 
     sagaMonitor: {
@@ -454,6 +466,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
   const api = {
     run,
     silentRun,
+    withStore,
     withState,
     withReducer,
     provide,
@@ -512,7 +525,7 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
 
   function checkExpectations(): void {
     expectations.forEach((expectation) => {
-      expectation({ storeState, returnValue });
+      expectation({ storeState, reduxStore, returnValue });
     });
   }
 
@@ -576,8 +589,11 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
       return memo;
     }, {});
 
+    const state = reduxStore ? reduxStore.getState() : storeState;
+
     return {
-      storeState,
+      storeState: state,
+      reduxStore,
       returnValue,
       effects: finalEffects,
       allEffects,
@@ -599,6 +615,12 @@ export default function expectSaga(generator: Function, ...sagaArgs: mixed[]): E
       timeout,
       silenceTimeout: true,
     });
+  }
+
+  function withStore(store: Store) {
+    reduxStore = store;
+    extractStoreState(store);
+    return api;
   }
 
   function withState(state: any): ExpectApi {

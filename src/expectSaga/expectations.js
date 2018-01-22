@@ -9,6 +9,7 @@ import reportActualEffects from './reportActualEffects';
 
 type ExpectationThunkArgs = {
   storeState: mixed,
+  reduxStore: Store,
   returnValue: mixed,
 };
 
@@ -104,9 +105,13 @@ type StoreStateExpectationArgs = {
 export function createStoreStateExpectation(
   { state: expectedState, expected }: StoreStateExpectationArgs,
 ): Expectation {
-  return ({ storeState }: ExpectationThunkArgs) => {
-    if (expected && !isEqual(expectedState, storeState)) {
-      const serializedActual = inspect(storeState, { depth: 3 });
+  return ({ storeState, reduxStore }: ExpectationThunkArgs) => {
+    const state = reduxStore ? reduxStore.getState() : storeState;
+    if (reduxStore) {
+      console.log('EXPECTED STATE', expectedState, state);
+    }
+    if (expected && !isEqual(expectedState, state)) {
+      const serializedActual = inspect(state, { depth: 3 });
       const serializedExpected = inspect(expectedState, { depth: 3 });
 
       const errorMessage = `
@@ -120,7 +125,7 @@ ${serializedActual}
 `;
 
       throw new SagaTestError(errorMessage);
-    } else if (!expected && isEqual(expectedState, storeState)) {
+    } else if (!expected && isEqual(expectedState, state)) {
       const serializedExpected = inspect(expectedState, { depth: 3 });
 
       const errorMessage = `

@@ -206,6 +206,11 @@ type Action = {
 
 type Reducer = (state: any, action: Action) => any;
 
+interface Store {
+  dispatch(Action): any,
+  getState(): any,
+}
+
 type Timeout = number | false;
 
 type TimeoutConfig = {
@@ -241,6 +246,7 @@ type ExpectApi = {
   run: Function,
   silentRun: Function,
   provide: (Providers | Array<Providers | [Object, any]>) => ExpectApi,
+  withStore: (Store) => ExpectApi,
   withState: (any) => ExpectApi,
   withReducer: (Reducer, any) => ExpectApi,
   actionChannel: Function,
